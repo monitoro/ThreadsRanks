@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ThreadsPost, SummaryStat, TopFan, HeatmapData } from '@/types/threads';
 import { ThreadsService } from '@/services/threads';
-import { Eye, UserCircle, Repeat2, Clock } from 'lucide-react';
+import { Eye, UserCircle, Repeat2, Clock, UserPlus, AtSign, CheckCircle, RefreshCw, XCircle, ShieldAlert } from 'lucide-react';
 
 export const useThreadsAnalytics = (isLoggedIn: boolean) => {
   const [loading, setLoading] = useState<boolean>(false);
@@ -12,6 +12,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
   const [topFans, setTopFans] = useState<TopFan[]>([]);
   const [heatmapData, setHeatmapData] = useState<HeatmapData[]>([]);
   const [engScore, setEngScore] = useState<number>(0);
+  const [isLive, setIsLive] = useState<boolean>(false);
 
   const fetchAnalytics = useCallback(async () => {
     if (!isLoggedIn) return;
@@ -20,7 +21,6 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
     const service = ThreadsService.getInstance();
     
     try {
-      // Run fetches in parallel for better performance
       const [stats, recentPosts, engData, activityData] = await Promise.all([
         service.getSummaryStats(),
         service.getRecentPosts(),
@@ -28,8 +28,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
         service.getActivityData()
       ]);
       
-      // Since icons are strings in the service, we map them back to Lucide components here
-      const iconMap: any = { Eye, UserCircle, Repeat2, Clock };
+      const iconMap: any = { Eye, UserCircle, Repeat2, Clock, UserPlus, AtSign, CheckCircle, RefreshCw, XCircle, ShieldAlert };
       const statsWithIcons = stats.map(s => ({ ...s, icon: iconMap[s.icon as string] || Eye }));
       
       setSummaryStats(statsWithIcons);
@@ -37,6 +36,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
       setTopFans(engData.topFans);
       setEngScore(engData.score);
       setHeatmapData(activityData);
+      setIsLive(service.isLiveMode);
     } catch (error) {
       console.error("Failed to fetch Threads analytics", error);
     } finally {
@@ -57,6 +57,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
     topFans,
     heatmapData,
     engScore,
+    isLive,
     refresh: fetchAnalytics
   };
 };

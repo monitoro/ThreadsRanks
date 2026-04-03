@@ -65,7 +65,8 @@ export default function ThreadsProDashboard() {
     posts,
     topFans,
     heatmapData,
-    engScore
+    engScore,
+    isLive
   } = useThreadsAnalytics(isLoggedIn);
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -133,7 +134,16 @@ export default function ThreadsProDashboard() {
               <h2 className="text-4xl font-black italic tracking-tighter flex items-center gap-4 text-glow">
                 Hi, Welcome back <span className="animate-bounce not-italic">👋</span>
               </h2>
-              <p className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] opacity-60">Real-time performance distribution</p>
+              <div className="flex items-center gap-3">
+                <p className="text-zinc-500 text-xs font-black uppercase tracking-[0.3em] opacity-60">Performance distribution</p>
+                <div className={cn(
+                  "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest flex items-center gap-1.5",
+                  isLive ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                )}>
+                  <div className={cn("w-1.5 h-1.5 rounded-full animate-pulse", isLive ? "bg-emerald-400" : "bg-rose-400")} />
+                  {isLive ? "Live Connection" : "Demo Mode (Check Token)"}
+                </div>
+              </div>
             </div>
             <div className="flex items-center gap-4">
               <div className="bg-[#0d0d0d] border border-white/5 rounded-3xl px-6 py-4 flex items-center gap-6 shadow-2xl transition-all hover:border-white/10">
