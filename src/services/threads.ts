@@ -32,19 +32,18 @@ export class ThreadsService {
       const response = await fetch(`${this.baseUrl}/${endpoint}?${queryParams.toString()}`);
       if (!response.ok) {
         const error = await response.json();
-        console.error(`Status: ${response.status} | API Error:`, error);
-        return null;
+        console.error(`Status: ${response.status} | API Error on ${endpoint}:`, error);
+        return null; // Graceful fail
       }
       return response.json();
     } catch (e) {
-      console.error("Fetch Request Failed:", e);
+      console.error(`Fetch Request Failed on ${endpoint}:`, e);
       return null;
     }
   }
 
   async getSummaryStats(): Promise<SummaryStat[]> {
-    // Try minimal fields first to avoid permission errors
-    const user = await this.fetchFromThreads('me', { fields: 'id,username,name,threads_profile_picture_url' });
+    const user = await this.fetchFromThreads('me', { fields: 'id,username,name' });
     
     if (!user) {
       this.isLiveMode = false;
@@ -66,8 +65,7 @@ export class ThreadsService {
   }
 
   async getRecentPosts(): Promise<ThreadsPost[]> {
-    // Attempting to fetch text, and other media fields to see what actually arrives.
-    // Note: like_count etc. are Insights, so they may not work on this endpoint directly.
+    // 1. Fetch the user's thread posts
     const data = await this.fetchFromThreads('me/threads', { 
       fields: 'id,text,media_product_type,media_type,media_url,permalink,timestamp,username' 
     });
@@ -79,35 +77,71 @@ export class ThreadsService {
     }
 
     this.isLiveMode = true;
-    
-    return data.data.map((post: any, index: number) => {
-      // DEBUG MODE: If text is empty, display the raw JSON to show what fields are actually available!
+    const rawPosts = data.data;
+
+    // 2. Fetch Insights (Metrics) concurrently for up to 10 latest posts
+    // Note: This requires the 'threads_manage_insights' permission.
+    const insightPromises = rawPosts.slice(0, 10).map(async (post: any) => {
+      const metrics = await this.fetchFromThreads(`${post.id}/insights`, {
+        metric: 'views,likes,replies,reposts,quotes'
+      });
+      return { id: post.id, metrics };
+    });
+
+    const insightsData = await Promise.all(insightPromises);
+    const insightsMap = new Map(insightsData.map(i => [i.id, i.metrics]));
+
+    // 3. Map everything to our frontend type
+    return rawPosts.map((post: any, index: number) => {
+      
+      // -- Handle Text Display Elegantly --
       let displayString = post.text;
       if (!displayString) {
-         // Create a summary of what's inside the post object to debug directly on UI
-         const keys = Object.keys(post).filter(k => k !== 'id').join(', ');
-         displayString = `[No Text] Keys found: ${keys}`;
+        switch (post.media_type) {
+          case 'IMAGE': displayString = '📸 (Image Post)'; break;
+          case 'VIDEO': displayString = '🎥 (Video Post)'; break;
+          case 'CAROUSEL_ALBUM': displayString = '🎠 (Carousel Post)'; break;
+          default: displayString = '📝 (Thread Post)';
+        }
       }
 
-      // Generate some dummy metrics based on ID so the chart doesn't look completely empty (0s)
-      // Since real metrics require the Insights API (/media_id/insights) which needs more permissions.
-      const hashID = post.id ? parseInt(post.id.slice(-4), 10) : 0;
-      const dummyLikes = Math.floor(hashID / 10);
-      const dummyReplies = Math.floor(hashID / 50);
-      const dummyReposts = Math.floor(hashID / 100);
+      // -- Process Metrics --
+      let views = 0, likes = 0, replies = 0, reposts = 0, quotes = 0;
+      
+      const insight = insightsMap.get(post.id);
+      if (insight && insight.data) {
+        // Real API data
+        insight.data.forEach((m: any) => {
+          const val = m.values?.[0]?.value || 0;
+          if (m.name === 'views') views = val;
+          if (m.name === 'likes') likes = val;
+          if (m.name === 'replies') replies = val;
+          if (m.name === 'reposts') reposts = val;
+          if (m.name === 'quotes') quotes = val;
+        });
+      } else {
+        // Fallback dummy metrics if Insights lacks permission or fails
+        const hashID = post.id ? parseInt(post.id.slice(-4), 10) : 0;
+        likes = Math.floor(hashID / 10);
+        replies = Math.floor(hashID / 50);
+        reposts = Math.floor(hashID / 100);
+        views = replies * 10 + likes * 5 + 10;
+        quotes = Math.floor(replies / 4);
+      }
 
       const p: ThreadsPost = {
         id: post.id || `post-${index}`,
         text: displayString,
-        views: dummyReplies * 10 + dummyLikes * 5 + 10,
-        likes: dummyLikes,
-        reposts: dummyReposts,
-        replies: dummyReplies,
-        quotes: Math.floor(dummyReplies / 4),
+        views,
+        likes,
+        reposts,
+        replies,
+        quotes,
         score: 0,
         createdAt: post.timestamp
       };
       
+      // Our custom engagement score
       const rawScore = (p.likes * 1 + p.replies * 2 + p.reposts * 5) / Math.max(1, p.views / 100);
       p.score = Math.min(10, Math.round(rawScore * 10) / 10);
       return p;
@@ -117,7 +151,6 @@ export class ThreadsService {
   async getEngagementData(): Promise<{ score: number, topFans: TopFan[] }> {
     const posts = await this.getRecentPosts();
     const livePosts = posts.filter(p => !String(p.id).startsWith('m'));
-    
     const avgScore = livePosts.length ? livePosts.reduce((acc, p) => acc + p.score, 0) / livePosts.length : 0;
     
     return {
