@@ -43,10 +43,9 @@ export class ThreadsService {
   }
 
   async getSummaryStats(): Promise<SummaryStat[]> {
-    // Attempt to get user info with multiple potential field names
-    // followers_count is the correct one for many accounts.
+    // Revert to known-safe fields: id, username, name
     const user = await this.fetchFromThreads('me', { 
-      fields: 'id,username,name,followers_count,threads_profile_picture_url' 
+      fields: 'id,username,name' 
     });
     
     if (!user) {
@@ -60,11 +59,22 @@ export class ThreadsService {
     }
 
     this.isLiveMode = true;
-    const followerCount = user.followers_count !== undefined ? user.followers_count : '---';
+    
+    // Attempt to get followers separately to avoid breaking the whole dashboard
+    let followersValue = '---';
+    try {
+      const insights = await this.fetchFromThreads('me/insights', { metric: 'follower_count' });
+      if (insights && insights.data) {
+        const fCount = insights.data.find((m: any) => m.name === 'follower_count')?.values?.[0]?.value;
+        if (fCount !== undefined) followersValue = fCount.toLocaleString();
+      }
+    } catch (e) {
+      console.warn("Follower insight inhibited by permissions.");
+    }
 
     return [
       { id: 'views', title: 'Status', value: 'Live Active', trend: 100, data: [1,1,1,1,1,1,1], icon: 'Eye' },
-      { id: 'followers', title: 'True Followers', value: followerCount.toLocaleString(), trend: 0, data: [], icon: 'UserPlus' },
+      { id: 'followers', title: 'Total Followers', value: followersValue, trend: 0, data: [], icon: 'UserPlus' },
       { id: 'account', title: 'Account Handle', value: `@${user.username || user.name}`, trend: 0, data: [], icon: 'AtSign' },
       { id: 'sync', title: 'Real-time Sync', value: 'Enabled', trend: 0, data: [], icon: 'CheckCircle' },
     ];
