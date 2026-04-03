@@ -46,22 +46,35 @@ export const ActivityHeatmap = ({ bestTimeData, heatmapData }: ActivityHeatmapPr
       <div className="h-[280px] w-full relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={bestTimeData}>
+            <defs>
+              <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.02)" />
-            <XAxis dataKey="time" stroke="#333" fontSize={10} tickLine={false} axisLine={false} />
+            <XAxis dataKey="time" stroke="#555" fontSize={11} tickLine={false} axisLine={false} dy={10} />
             <YAxis hide />
             <Tooltip 
-              cursor={{fill: 'rgba(255,255,255,0.01)'}} 
-              contentStyle={{ backgroundColor: '#000', border: '1px solid #222', borderRadius: '16px', padding: '12px' }} 
+              cursor={{fill: 'rgba(255,255,255,0.02)'}} 
+              contentStyle={{ backgroundColor: '#09090b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', padding: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} 
+              itemStyle={{ color: '#10b981', fontWeight: 'bold' }}
+              labelStyle={{ color: '#a1a1aa', fontSize: '12px', marginBottom: '4px' }}
+              formatter={(value: any) => [`${value} Activity Score`, 'Score']}
             />
             <Bar dataKey="score" radius={[8, 8, 0, 0]}>
-              {bestTimeData.map((entry, index) => (
-                <Cell 
-                  key={`cell-${index}`} 
-                  fill={entry.score > 80 ? '#ffffff' : '#141414'} 
-                  stroke={entry.score > 80 ? 'none' : '#222'} 
-                  strokeWidth={1} 
-                />
-              ))}
+              {bestTimeData.map((entry, index) => {
+                const isTop = entry.score >= Math.max(...bestTimeData.map(d => d.score)) * 0.8;
+                return (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={isTop ? 'url(#colorScore)' : '#1a1a1a'} 
+                    stroke={isTop ? '#34d399' : '#27272a'} 
+                    strokeWidth={1} 
+                    className="transition-all duration-300"
+                  />
+                 );
+              })}
             </Bar>
           </BarChart>
         </ResponsiveContainer>

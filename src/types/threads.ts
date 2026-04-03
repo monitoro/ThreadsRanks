@@ -34,3 +34,8 @@ export interface HeatmapData {
   day: string;
   hours: number[];
 }
+
+export interface BestTimeData {
+  time: string;
+  score: number;
+}

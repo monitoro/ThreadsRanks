@@ -149,19 +149,53 @@ export class ThreadsService {
     };
   }
 
-  async getActivityData(): Promise<HeatmapData[]> {
+  async getActivityData(): Promise<{ heatmap: HeatmapData[], bestTimes: import('@/types/threads').BestTimeData[] }> {
     const posts = await this.getRecentPosts();
     const validPosts = posts.filter(p => p.id !== 'empty');
+    
+    // Fallback if no real dates yet for demo or brand new accounts
+    if (validPosts.length === 0 || !validPosts.some(p => p.createdAt)) {
+      return {
+        heatmap: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => ({ day, hours: Array(24).fill(0) })),
+        bestTimes: [
+          { time: '00-04', score: 35 }, { time: '04-08', score: 12 },
+          { time: '08-12', score: 85 }, { time: '12-16', score: 95 },
+          { time: '16-20', score: 65 }, { time: '20-24', score: 45 }
+        ]
+      };
+    }
+
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const heatmap: HeatmapData[] = days.map(day => ({ day, hours: Array(24).fill(0) }));
+    
+    // Buckets: 00-04, 04-08, 08-12, 12-16, 16-20, 20-24
+    const timeBlocks = Array(6).fill(0);
 
     validPosts.forEach(post => {
       if (post.createdAt) {
         const date = new Date(post.createdAt);
-        heatmap[date.getDay()].hours[date.getHours()]++;
+        const hour = date.getHours();
+        const day = date.getDay();
+        
+        const engagementWeight = post.likes + (post.views / 10) + post.replies * 2;
+        heatmap[day].hours[hour] += Math.max(1, engagementWeight / 10); // scale it down a bit
+        
+        const blockIndex = Math.floor(hour / 4);
+        timeBlocks[blockIndex] += engagementWeight;
       }
     });
 
-    return heatmap;
+    // Normalize to 1-100 max score for the bestTime chart
+    const maxScore = Math.max(...timeBlocks, 1);
+    const bestTimes = timeBlocks.map((score, i) => {
+      const start = (i * 4).toString().padStart(2, '0');
+      const end = ((i + 1) * 4).toString().padStart(2, '0');
+      return {
+        time: `${start}-${end}`,
+        score: Math.round((score / maxScore) * 100) || 5 // give at least slightly visible bar
+      };
+    });
+
+    return { heatmap, bestTimes };
   }
 }

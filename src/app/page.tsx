@@ -21,15 +21,6 @@ function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-const BEST_TIME_DATA = [
-  { time: '00-04', score: 35 },
-  { time: '04-08', score: 12 },
-  { time: '08-12', score: 85 },
-  { time: '12-16', score: 95 },
-  { time: '16-20', score: 65 },
-  { time: '20-24', score: 45 },
-];
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -65,6 +56,7 @@ export default function ThreadsProDashboard() {
     posts,
     topFans,
     heatmapData,
+    bestTimeData,
     engScore,
     isLive
   } = useThreadsAnalytics(isLoggedIn);
@@ -188,7 +180,7 @@ export default function ThreadsProDashboard() {
               {loading ? (
                 <div className="h-[600px] glass-card bg-zinc-900/20 animate-pulse rounded-[2.5rem] border border-white/5" />
               ) : (
-                <ActivityHeatmap bestTimeData={BEST_TIME_DATA} heatmapData={heatmapData} />
+                <ActivityHeatmap bestTimeData={bestTimeData} heatmapData={heatmapData} />
               )}
             </motion.div>
 

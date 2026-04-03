@@ -11,6 +11,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
   const [posts, setPosts] = useState<ThreadsPost[]>([]);
   const [topFans, setTopFans] = useState<TopFan[]>([]);
   const [heatmapData, setHeatmapData] = useState<HeatmapData[]>([]);
+  const [bestTimeData, setBestTimeData] = useState<import('@/types/threads').BestTimeData[]>([]);
   const [engScore, setEngScore] = useState<number>(0);
   const [isLive, setIsLive] = useState<boolean>(false);
 
@@ -35,7 +36,8 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
       setPosts(recentPosts);
       setTopFans(engData.topFans);
       setEngScore(engData.score);
-      setHeatmapData(activityData);
+      setHeatmapData(activityData.heatmap);
+      setBestTimeData(activityData.bestTimes);
       setIsLive(service.isLiveMode);
     } catch (error) {
       console.error("Failed to fetch Threads analytics", error);
@@ -56,6 +58,7 @@ export const useThreadsAnalytics = (isLoggedIn: boolean) => {
     posts,
     topFans,
     heatmapData,
+    bestTimeData,
     engScore,
     isLive,
     refresh: fetchAnalytics
