@@ -194,7 +194,7 @@ export default function ThreadsProDashboard() {
             </motion.div>
 
             {/* Engagement Score & Ranking */}
-            <EngagementScore isLoggedIn={isLoggedIn} topFans={topFans} />
+            <EngagementScore isLoggedIn={isLoggedIn} topFans={topFans} posts={posts} />
           </div>
 
           {/* Table Section */}
