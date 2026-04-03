@@ -8,6 +8,7 @@ export interface ThreadsPost {
   quotes: number;
   score: number;
   createdAt?: string;
+  permalink?: string;
 }
 
 export interface SummaryStat {

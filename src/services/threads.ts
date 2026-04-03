@@ -125,7 +125,8 @@ export class ThreadsService {
         replies: metrics?.replies || 0,
         quotes: metrics?.quotes || 0,
         score: 0,
-        createdAt: post.timestamp
+        createdAt: post.timestamp,
+        permalink: post.permalink
       };
 
       const rawScore = (p.likes * 1 + p.replies * 2 + p.reposts * 5) / Math.max(1, p.views / 100);
