@@ -13,6 +13,7 @@ import { ActivityHeatmap } from '@/components/dashboard/ActivityHeatmap';
 import { EngagementScore } from '@/components/dashboard/EngagementScore';
 import { ActivityTable } from '@/components/dashboard/ActivityTable';
 import { LoginOverlay } from '@/components/auth/LoginOverlay';
+import { TopPerformanceCard } from '@/components/dashboard/TopPerformanceCard';
 
 // Hooks
 import { useThreadsAnalytics } from '@/hooks/useThreadsAnalytics';
@@ -60,6 +61,11 @@ export default function ThreadsProDashboard() {
     engScore,
     isLive
   } = useThreadsAnalytics(isLoggedIn);
+
+  const topPost = React.useMemo(() => {
+    if (!posts || posts.length === 0 || posts[0].id === 'empty') return null;
+    return [...posts].sort((a, b) => b.score - a.score)[0];
+  }, [posts]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -173,6 +179,9 @@ export default function ThreadsProDashboard() {
               )}
             </div>
           </section>
+
+          {/* Top Performance Highlight */}
+          {!loading && topPost && <TopPerformanceCard post={topPost} />}
 
           <div className="grid grid-cols-1 lg:grid-cols-6 gap-10">
             {/* Optimal Posting Time & Heatmap */}
