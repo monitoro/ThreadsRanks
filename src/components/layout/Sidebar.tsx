@@ -105,7 +105,16 @@ export const Sidebar = ({
           </div>
         ) : (
           <button 
-            onClick={onConnect}
+            onClick={() => {
+              const appId = process.env.NEXT_PUBLIC_THREADS_APP_ID;
+              if (appId) {
+                const redirect = encodeURIComponent(window.location.origin + '/api/threads/callback');
+                const scope = 'threads_basic,threads_manage_insights';
+                window.location.href = `https://www.threads.net/oauth/authorize?client_id=${appId}&redirect_uri=${redirect}&scope=${scope}&response_type=code`;
+              } else {
+                onConnect(); // Simulated connection
+              }
+            }}
             disabled={isConnecting}
             className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-zinc-200 transition-all active:scale-95 disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]"
           >

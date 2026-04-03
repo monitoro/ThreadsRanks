@@ -45,11 +45,12 @@ export const LoginOverlay = ({ isConnecting, onConnect }: LoginOverlayProps) => 
               </>
             )}
           </button>
-          <div className="flex items-center justify-center gap-4 opacity-20">
              <div className="h-px flex-1 bg-gradient-to-r from-transparent to-zinc-700" />
-             <span className="text-[9px] font-black uppercase tracking-widest">Secure OAuth 2.0</span>
+             <div className="flex flex-col items-center gap-1">
+               <span className="text-[9px] font-black uppercase tracking-widest">Secure OAuth 2.0</span>
+               <p className="text-[8px] text-zinc-600 font-bold">Requires env.THREADS_USER_TOKEN</p>
+             </div>
              <div className="h-px flex-1 bg-gradient-to-l from-transparent to-zinc-700" />
-          </div>
         </div>
       </motion.div>
     </div>

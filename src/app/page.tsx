@@ -14,6 +14,9 @@ import { EngagementScore } from '@/components/dashboard/EngagementScore';
 import { ActivityTable } from '@/components/dashboard/ActivityTable';
 import { LoginOverlay } from '@/components/auth/LoginOverlay';
 import { TopPerformanceCard } from '@/components/dashboard/TopPerformanceCard';
+import { ShareModal } from '@/components/dashboard/ShareModal';
+import { PostDetailModal } from '@/components/dashboard/PostDetailModal';
+import { ThreadsPost } from '@/types/threads';
 
 // Hooks
 import { useThreadsAnalytics } from '@/hooks/useThreadsAnalytics';
@@ -49,6 +52,9 @@ export default function ThreadsProDashboard() {
   const [activeTab, setActiveTab] = useState('Dashboard');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<ThreadsPost | null>(null);
+  const [isPostDetailOpen, setIsPostDetailOpen] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const {
@@ -59,7 +65,8 @@ export default function ThreadsProDashboard() {
     heatmapData,
     bestTimeData,
     engScore,
-    isLive
+    isLive,
+    followerCount
   } = useThreadsAnalytics(isLoggedIn);
 
   const topPost = React.useMemo(() => {
@@ -86,6 +93,11 @@ export default function ThreadsProDashboard() {
 
   const handleLogout = () => {
     setIsLoggedIn(false);
+  };
+
+  const handlePostSelect = (post: ThreadsPost) => {
+    setSelectedPost(post);
+    setIsPostDetailOpen(true);
   };
 
   return (
@@ -147,10 +159,13 @@ export default function ThreadsProDashboard() {
               <div className="bg-[#0d0d0d] border border-white/5 rounded-3xl px-6 py-4 flex items-center gap-6 shadow-2xl transition-all hover:border-white/10">
                 <div className="text-right">
                   <p className="text-[9px] text-zinc-500 font-black uppercase tracking-[0.2em] mb-1">Total Followers</p>
-                  <p className="text-2xl font-black italic tracking-tighter text-zinc-100">12,504</p>
+                  <p className="text-2xl font-black italic tracking-tighter text-zinc-100">{followerCount}</p>
                 </div>
                 <div className="w-px h-10 bg-zinc-800" />
-                <button className="bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] px-5 py-3 rounded-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-[0_10px_30px_rgba(255,255,255,0.1)]">
+                <button 
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="bg-white text-black text-[10px] font-black uppercase tracking-[0.2em] px-5 py-3 rounded-2xl hover:bg-zinc-200 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-[0_10px_30px_rgba(255,255,255,0.1)]"
+                >
                   <Share2 className="w-3.5 h-3.5" />
                   Broadcast Dash
                 </button>
@@ -201,10 +216,24 @@ export default function ThreadsProDashboard() {
           {loading ? (
             <div className="h-[400px] glass-card bg-zinc-900/20 animate-pulse rounded-[2.5rem] border border-white/5" />
           ) : (
-            <ActivityTable posts={posts} />
+            <ActivityTable posts={posts} onPostSelect={handlePostSelect} />
           )}
         </motion.div>
       </main>
+
+      <ShareModal 
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        followerCount={followerCount}
+        topPost={topPost}
+        username={isLoggedIn ? (summaryStats.find(s => s.id === 'account')?.value.replace('@', '') || 'Dashboard') : 'DemoUser'}
+      />
+
+      <PostDetailModal 
+        isOpen={isPostDetailOpen}
+        onClose={() => setIsPostDetailOpen(false)}
+        post={selectedPost}
+      />
     </div>
   );
 }

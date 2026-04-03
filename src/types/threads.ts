@@ -9,6 +9,8 @@ export interface ThreadsPost {
   score: number;
   createdAt?: string;
   permalink?: string;
+  hasInsights?: boolean;
+  insightsError?: string | null;
 }
 
 export interface SummaryStat {

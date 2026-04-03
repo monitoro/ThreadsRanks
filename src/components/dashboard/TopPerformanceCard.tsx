@@ -49,16 +49,25 @@ export const TopPerformanceCard = ({ post }: TopPerformanceCardProps) => {
 
         {/* Right Section: Stats */}
         <div className="flex items-center gap-4 flex-wrap shrink-0">
-          <StatBox icon={<Eye className="w-4 h-4 text-emerald-400" />} label="Views" value={post.views} />
-          <StatBox icon={<Heart className="w-4 h-4 text-rose-400" />} label="Likes" value={post.likes} />
-          <StatBox icon={<MessageCircle className="w-4 h-4 text-blue-400" />} label="Replies" value={post.replies} />
-          <StatBox icon={<Repeat2 className="w-4 h-4 text-indigo-400" />} label="Reposts" value={post.reposts} />
-          
-          {/* Total Score Badge */}
-          <div className="bg-white text-black px-6 py-4 rounded-2xl flex flex-col items-center justify-center shadow-[0_10px_30px_rgba(255,255,255,0.1)] ml-2">
-            <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Eng Score</span>
-            <span className="text-2xl font-black italic">{post.score.toLocaleString()}</span>
-          </div>
+          {post.hasInsights ? (
+            <>
+              <StatBox icon={<Eye className="w-4 h-4 text-emerald-400" />} label="Views" value={post.views} />
+              <StatBox icon={<Heart className="w-4 h-4 text-rose-400" />} label="Likes" value={post.likes} />
+              <StatBox icon={<MessageCircle className="w-4 h-4 text-blue-400" />} label="Replies" value={post.replies} />
+              <StatBox icon={<Repeat2 className="w-4 h-4 text-indigo-400" />} label="Reposts" value={post.reposts} />
+              
+              {/* Total Score Badge */}
+              <div className="bg-white text-black px-6 py-4 rounded-2xl flex flex-col items-center justify-center shadow-[0_10px_30px_rgba(255,255,255,0.1)] ml-2">
+                <span className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-1">Eng Score</span>
+                <span className="text-2xl font-black italic">{post.score.toLocaleString()}</span>
+              </div>
+            </>
+          ) : (
+            <div className="bg-zinc-900/50 border border-white/5 rounded-2xl px-8 py-4 flex flex-col items-center justify-center opacity-40">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500 mb-1">Insights Unavailable</span>
+              <span className="text-xs font-bold text-zinc-600">Update Token Permissions</span>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>

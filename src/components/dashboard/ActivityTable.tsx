@@ -4,14 +4,21 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThreadsPost } from '@/types/threads';
 import { ArrowUpRight, Flame, Eye, Calendar, Clock } from 'lucide-react';
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 interface ActivityTableProps {
   posts: ThreadsPost[];
+  onPostSelect: (post: ThreadsPost) => void;
 }
 
 type SortOption = 'score' | 'views' | 'date';
 
-export const ActivityTable = ({ posts }: ActivityTableProps) => {
+export const ActivityTable = ({ posts, onPostSelect }: ActivityTableProps) => {
   const [sortBy, setSortBy] = useState<SortOption>('score');
 
   const sortedPosts = useMemo(() => {
@@ -26,9 +33,9 @@ export const ActivityTable = ({ posts }: ActivityTableProps) => {
     });
   }, [posts, sortBy]);
 
-  const handleRowClick = (permalink?: string) => {
-    if (permalink) {
-      window.open(permalink, '_blank', 'noopener,noreferrer');
+  const handleRowClick = (post: ThreadsPost) => {
+    if (post.id !== 'empty') {
+      onPostSelect(post);
     }
   };
 
@@ -37,7 +44,7 @@ export const ActivityTable = ({ posts }: ActivityTableProps) => {
       <div className="flex justify-between items-end border-b border-zinc-900 pb-8">
         <div>
           <h3 className="font-black text-3xl italic tracking-tighter text-white text-glow mb-2">Detailed Post Analytics.</h3>
-          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">Select a row to view thread</p>
+          <p className="text-zinc-500 text-xs font-black uppercase tracking-widest">Select a row to view deep insights</p>
         </div>
         
         {/* Sort Controls */}
@@ -69,7 +76,7 @@ export const ActivityTable = ({ posts }: ActivityTableProps) => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    onClick={() => !isEmpty && handleRowClick(post.permalink)}
+                    onClick={() => !isEmpty && handleRowClick(post)}
                     className={`group/row transition-all duration-300 ${isEmpty ? '' : 'hover:bg-white/[0.02] cursor-pointer'}`}
                   >
                     <td className="px-10 py-8">
@@ -88,22 +95,41 @@ export const ActivityTable = ({ posts }: ActivityTableProps) => {
                     <td className="px-6 py-8 text-center">
                       {!isEmpty ? (
                         <div className="flex flex-col items-center">
-                          <span className="text-lg font-black italic tracking-tighter text-zinc-400 group-hover/row:text-emerald-400 transition-colors">{post.views.toLocaleString()}</span>
-                          <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 mt-1">Views</span>
+                          {post.hasInsights ? (
+                            <>
+                              <span className="text-lg font-black italic tracking-tighter text-zinc-400 group-hover/row:text-emerald-400 transition-colors">
+                                {post.views.toLocaleString()}
+                              </span>
+                              <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 mt-1">Views</span>
+                            </>
+                          ) : (
+                            <div className="flex flex-col items-center opacity-40">
+                              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">권한 필요</span>
+                              <span className="text-[8px] font-bold text-zinc-700 mt-1">API Error</span>
+                            </div>
+                          )}
                         </div>
                       ) : '-'}
                     </td>
                     <td className="px-6 py-8 text-center">
                       {!isEmpty ? (
-                        <div className="w-12 h-12 mx-auto rounded-[1.25rem] border border-white/5 bg-white/5 flex items-center justify-center text-sm font-black italic text-zinc-300 group-hover/row:bg-amber-500 group-hover/row:text-black group-hover/row:border-amber-500 transition-all shadow-[0_0_15px_rgba(245,158,11,0)] group-hover/row:shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-                          {post.score}
+                        <div className={cn(
+                          "w-12 h-12 mx-auto rounded-[1.25rem] border border-white/5 flex items-center justify-center text-sm font-black italic transition-all",
+                          post.hasInsights 
+                            ? "bg-white/5 text-zinc-300 group-hover/row:bg-amber-500 group-hover/row:text-black group-hover/row:border-amber-500 shadow-[0_0_15px_rgba(245,158,11,0)] group-hover/row:shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+                            : "bg-zinc-900/50 text-zinc-700"
+                        )}>
+                          {post.hasInsights ? post.score : '-'}
                         </div>
                       ) : '-'}
                     </td>
                     <td className="px-10 py-8 text-right">
-                      {!isEmpty && post.permalink && (
-                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 border border-white/5 text-zinc-500 group-hover/row:bg-white group-hover/row:text-black transition-all">
-                          <ArrowUpRight className="w-4 h-4" />
+                      {!isEmpty && (
+                        <div className="inline-flex items-center gap-2 group/btn">
+                          <span className="text-[8px] font-black text-zinc-600 uppercase tracking-widest opacity-0 group-hover/row:opacity-100 transition-opacity">Analyze Post</span>
+                          <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-900 border border-white/5 text-zinc-500 group-hover/row:bg-white group-hover/row:text-black transition-all">
+                            <ArrowUpRight className="w-4 h-4" />
+                          </div>
                         </div>
                       )}
                     </td>
