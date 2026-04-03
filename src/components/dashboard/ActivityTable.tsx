@@ -103,9 +103,11 @@ export const ActivityTable = ({ posts, onPostSelect }: ActivityTableProps) => {
                               <span className="text-[9px] font-black uppercase tracking-widest text-zinc-700 mt-1">Views</span>
                             </>
                           ) : (
-                            <div className="flex flex-col items-center opacity-40">
-                              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">권한 필요</span>
-                              <span className="text-[8px] font-bold text-zinc-700 mt-1">API Error</span>
+                            <div className="flex flex-col items-center opacity-60">
+                              <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest leading-tight">Insight Error</span>
+                              <span className="text-[8px] font-black text-zinc-600 max-w-[120px] text-center mt-0.5 line-clamp-2">
+                                {post.insightsError || 'Missing Permission'}
+                              </span>
                             </div>
                           )}
                         </div>

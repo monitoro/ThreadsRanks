@@ -62,15 +62,17 @@ export async function GET() {
           if (insData?.data) {
             insights = {};
             insData.data.forEach((m: any) => {
-              insights[m.name] = m.values?.[0]?.value ?? m.total_value?.value ?? 0;
+              // Try both values and total_value
+              insights[m.name] = m.total_value?.value ?? m.values?.[0]?.value ?? 0;
             });
           }
         } else {
-          const err = await insRes.json();
-          insightsError = err?.error?.message || 'Insights failed';
+          const errBody = await insRes.json();
+          console.error(`[API /posts] Insights failed for ${post.id}:`, errBody);
+          insightsError = errBody?.error?.message || 'Insights permission required';
         }
-      } catch (e) {
-        insightsError = 'Network error';
+      } catch (e: any) {
+        insightsError = e.message || 'Network error';
       }
 
       return {
