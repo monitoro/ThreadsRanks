@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Share2 } from 'lucide-react';
+import { Share2, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -182,6 +182,37 @@ export default function ThreadsProDashboard() {
                 <span className="text-zinc-700 font-black ml-2">Period: 7D</span>
               </h3>
             </motion.div>
+
+            {/* API Info Banner */}
+            {isLoggedIn && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="my-8 p-6 rounded-[2rem] bg-zinc-900/50 border border-emerald-500/10 flex flex-col md:flex-row items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                    <ShieldAlert className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-zinc-200">인사이트 데이터 조회 안내</h4>
+                    <p className="text-[11px] text-zinc-500 font-medium mt-1">
+                      일반 계정의 경우 조회수 및 반응 상세 지표가 <span className="text-emerald-400 font-bold">0</span> 또는 <span className="text-emerald-400 font-bold">에러</span>로 표시될 수 있습니다. 
+                      모든 기능을 사용하시려면 <span className="text-zinc-200 font-bold underline underline-offset-4 decoration-emerald-500/30">비즈니스 또는 크리에이터 계정</span>으로 전환해 주세요.
+                    </p>
+                  </div>
+                </div>
+                <a 
+                  href="https://help.instagram.com/502981923235522" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="px-6 py-3 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-[10px] font-black uppercase tracking-widest transition-all"
+                >
+                  Learn More
+                </a>
+              </motion.div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {loading ? (
                 Array.from({length: 4}).map((_, i) => <SkeletonCard key={i} />)

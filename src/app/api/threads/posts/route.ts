@@ -45,8 +45,8 @@ export async function GET() {
     });
   }
 
-  // 2. 각 게시물의 Insights 데이터 (최대 15개만 가져옴)
-  const postsToFetch = rawPosts.slice(0, 15);
+  // 2. 각 게시물의 Insights 데이터 (최대 30개까지 가져옴)
+  const postsToFetch = rawPosts.slice(0, 30);
   
   const postsWithInsights = await Promise.all(
     postsToFetch.map(async (post: any) => {
@@ -62,14 +62,15 @@ export async function GET() {
           if (insData?.data) {
             insights = {};
             insData.data.forEach((m: any) => {
-              // Try both values and total_value
+              // Try BOTH values array and total_value object
               insights[m.name] = m.total_value?.value ?? m.values?.[0]?.value ?? 0;
             });
           }
         } else {
           const errBody = await insRes.json();
           console.error(`[API /posts] Insights failed for ${post.id}:`, errBody);
-          insightsError = errBody?.error?.message || 'Insights permission required';
+          // If the error is about account type or too old, we capture it
+          insightsError = errBody?.error?.message || 'Permission Error';
         }
       } catch (e: any) {
         insightsError = e.message || 'Network error';
@@ -90,7 +91,7 @@ export async function GET() {
   );
 
   // 나머지 게시물은 insights 없이 반환
-  const remainingPosts = rawPosts.slice(15).map((post: any) => ({
+  const remainingPosts = rawPosts.slice(30).map((post: any) => ({
     id: post.id,
     text: post.text || null,
     media_type: post.media_type || 'TEXT',
@@ -99,7 +100,7 @@ export async function GET() {
     permalink: post.permalink,
     username: post.username,
     insights: null,
-    insightsError: 'Not fetched (over limit)',
+    insightsError: 'Not fetched (over 30 limit)',
   }));
 
   return NextResponse.json({
